@@ -9,12 +9,13 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 
+import com.bit4woo.utilbox.utils.SystemUtils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import GUI.GUIMain;
-import base.Commons;
 import burp.BurpExtender;
 import title.LineEntry;
 
@@ -47,7 +48,7 @@ public class ConfigManager {
 	}
 
 	public static String getBrowserPath() {
-		if (Commons.isMac()) {
+		if (SystemUtils.isMac()) {
 			return macDefaultBrowserPath;
 		}else {
 			for (String path : winDefaultBrowserPaths) {
@@ -308,9 +309,9 @@ public class ConfigManager {
 		if (item.getProtocol().equalsIgnoreCase("http")) {
 			if (400>item.getStatuscode() && item.getStatuscode() >=300) {
 				String locationUrl = item.getHeaderValueOf(false,"Location");//不包含默认端口
-				locationUrl = locationUrl.toLowerCase().replace("https://", "http://");
-				if (locationUrl.equalsIgnoreCase(item.fetchUrlWithCommonFormate())) {
-					return true;
+				if (StringUtils.isNotEmpty(locationUrl)){
+					locationUrl = locationUrl.toLowerCase().replace("https://", "http://");
+					return locationUrl.equalsIgnoreCase(item.fetchUrlWithCommonFormate());
 				}
 			}
 		}

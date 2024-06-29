@@ -33,7 +33,7 @@ public class SuperJTextArea extends JTextArea {
 	public static int maxLength = 100000;
 	public static History history = new History(5,false);
 
-	final String tempFilePath = FileUtils.getTempDirectory() + File.separator + "ContentIsInTmpFile.txt";
+	public static final String tempFilePath = FileUtils.getTempDirectory() + File.separator + "ContentIsInTmpFile.txt";
 
 	/**
 	 * @param useTempFile       当文件内容过大时，将文件内容存入零时文件，避免程序卡死
@@ -270,10 +270,8 @@ public class SuperJTextArea extends JTextArea {
 	 */
 	public void showPreValue() {
 		String preValue = history.moveUP();
-		if (preValue.equals(getText())) {
-			showPreValue();
-		}else {
-			BurpExtender.getStdout().print("preValue"+preValue);
+		BurpExtender.getStdout().print("preValue"+preValue);
+		if (StringUtils.isNotBlank(preValue)) {
 			setText(preValue);
 		}
 	}
@@ -286,7 +284,9 @@ public class SuperJTextArea extends JTextArea {
 	public void showNextValue() {
 		String nextValue = history.moveDown();
 		BurpExtender.getStdout().print("nextValue"+nextValue);
-		setText(nextValue);
+		if (StringUtils.isNotBlank(nextValue)) {
+			setText(nextValue);
+		}
 	}
 
 	/**

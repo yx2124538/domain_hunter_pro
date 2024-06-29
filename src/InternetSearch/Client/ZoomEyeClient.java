@@ -4,16 +4,19 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.bit4woo.utilbox.utils.JsonUtils;
+
 import InternetSearch.SearchEngine;
 import InternetSearch.SearchResultEntry;
-import Tools.JSONHandler;
 import config.ConfigManager;
 import config.ConfigName;
 
@@ -35,24 +38,15 @@ public class ZoomEyeClient extends BaseClient {
 				for (Object item : results) {
 
 					JSONObject entryitem = (JSONObject) item;
-
+					Set<String> ipSet = getIPSet(entryitem);
 					SearchResultEntry entry = new SearchResultEntry();
-					try {
-						//title:xxx 获得的是IP string
-						entry.getIPSet().add(entryitem.getString("ip"));
-					}catch(Exception e) {
-						//site:xxx.com 获得的是IP List
-						JSONArray ipList = entryitem.getJSONArray("ip");
-						for (int i = 0; i < ipList.length(); i++) {
-				            String element = ipList.getString(i);
-				            entry.getIPSet().add(element);
-				        }
-					}
-					
+
+					entry.getIPSet().addAll(ipSet);
+
 					try {
 						entry.setHost(entryitem.getString("rdns"));
 					} catch (Exception e) {
-						entry.setHost(entryitem.getString("ip"));
+						entry.setHost((String)(ipSet.toArray())[0]);
 					}
 
 					int port = entryitem.getJSONObject("portinfo").getInt("port");
@@ -76,12 +70,29 @@ public class ZoomEyeClient extends BaseClient {
 		return result;
 	}
 
+	public static Set<String> getIPSet(JSONObject entryitem){
+		Set<String> result = new HashSet<String>();
+
+		try {
+			//title:xxx 获得的是IP string
+			result.add(entryitem.getString("ip"));
+		}catch(Exception e) {
+			//site:xxx.com 获得的是IP List
+			JSONArray ipList = entryitem.getJSONArray("ip");
+			for (int i = 0; i < ipList.length(); i++) {
+				String element = ipList.getString(i);
+				result.add(element);
+			}
+		}
+		return result;
+	}
+
 	@Override
 	public boolean hasNextPage(String respbody,int currentPage) {
 		// "size":83,"page":1,
 		try {
 			int pageSize = 10;
-			ArrayList<String> tmp_result = JSONHandler.grepValueFromJson(respbody, "total");
+			ArrayList<String> tmp_result = JsonUtils.grepValueFromJson(respbody, "total");
 			if (tmp_result.size() >= 1) {
 				int total = Integer.parseInt(tmp_result.get(0));
 				if (total > currentPage * pageSize) {
